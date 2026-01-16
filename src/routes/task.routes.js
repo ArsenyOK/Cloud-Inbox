@@ -1,6 +1,8 @@
 const express = require("express");
 const { z } = require("zod");
 const { Task } = require("../models/task.model");
+const { createQueue } = require("../queue");
+const queue = createQueue();
 
 const taskRouter = express.Router();
 
@@ -18,6 +20,8 @@ taskRouter.post("/", async (req, res, next) => {
       storageKey: body.storageKey,
       status: "PENDING",
     });
+
+    await queue.send({ taskId: task._id.toString() });
 
     res.status(201).json({
       id: task._id.toString(),
