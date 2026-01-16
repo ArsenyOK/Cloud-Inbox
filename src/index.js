@@ -4,7 +4,7 @@ const { createApp } = require("./app");
 const PORT = process.env.PORT || 5000;
 
 async function main() {
-  const app = createApp();
+  const app = await createApp();
   app.listen(PORT, () => {
     console.log(`API listening on http://localhost:${PORT}`);
   });
