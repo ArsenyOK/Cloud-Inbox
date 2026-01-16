@@ -1,3 +1,9 @@
 # Cloud Inbox
 
-## Stack: Node.js + Express.js, MongoDB Atlas, Cloud(AWS, Azure) JWT tokens
+## Stack:
+- BE: NodeJS + Express.js
+- DB: MongoDB Atlas (Mongoose)
+- Cloud: AWS, Azure 
+- Auth: JWT toknes
+- Infra: 
+- Config: CLOUD=aws|azure
