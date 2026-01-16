@@ -16,6 +16,9 @@ const TaskSchema = new mongoose.Schema(
     result: {
       processedAt: { type: Date },
       info: { type: String },
+      file: { type: mongoose.Schema.Types.Mixed },
+      preview: { type: String },
+      error: { type: String },
     },
   },
   { timestamps: true }

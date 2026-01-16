@@ -20,12 +20,16 @@ function createAzureBlobProvider() {
     credential
   );
 
+  function getContainerClient() {
+    return serviceClient.getContainerClient(container);
+  }
+
   async function ensureContainerExists() {
-    const containerClient = serviceClient.getContainerClient(container);
+    const containerClient = getContainerClient();
     await containerClient.createIfNotExists();
   }
 
-  async function createUploadUrl(storageKey, contentType) {
+  async function createUploadUrl(storageKey) {
     const expiresOn = new Date(Date.now() + 15 * 60 * 1000); // 15 min
     const permissions = BlobSASPermissions.parse("cw"); // create + write
 
@@ -35,16 +39,55 @@ function createAzureBlobProvider() {
         blobName: storageKey,
         permissions,
         expiresOn,
-        contentType,
       },
       credential
     ).toString();
 
-    const uploadUrl = `https://${account}.blob.core.windows.net/${container}/${storageKey}?${sas}`;
-    return uploadUrl;
+    return `https://${account}.blob.core.windows.net/${container}/${storageKey}?${sas}`;
   }
 
-  return { ensureContainerExists, createUploadUrl };
+  async function getBlobInfo(storageKey) {
+    const containerClient = getContainerClient();
+    const blobClient = containerClient.getBlobClient(storageKey);
+
+    const props = await blobClient.getProperties();
+
+    return {
+      url: blobClient.url,
+      size: props.contentLength ?? null,
+      contentType: props.contentType ?? null,
+      lastModified: props.lastModified
+        ? props.lastModified.toISOString()
+        : null,
+      etag: props.etag ?? null,
+    };
+  }
+
+  async function downloadTextPreview(storageKey, maxBytes = 200) {
+    const containerClient = getContainerClient();
+    const blobClient = containerClient.getBlobClient(storageKey);
+
+    // Important: it's working only for small files
+    const downloadResp = await blobClient.download(0, maxBytes);
+    const buf = await streamToBuffer(downloadResp.readableStreamBody);
+    return buf.toString("utf8");
+  }
+
+  return {
+    ensureContainerExists,
+    createUploadUrl,
+    getBlobInfo,
+    downloadTextPreview,
+  };
+}
+
+function streamToBuffer(readableStream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    readableStream.on("data", (data) => chunks.push(data));
+    readableStream.on("end", () => resolve(Buffer.concat(chunks)));
+    readableStream.on("error", reject);
+  });
 }
 
 module.exports = { createAzureBlobProvider };
