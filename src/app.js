@@ -15,7 +15,7 @@ async function createApp() {
   app.use(express.json({ limit: "1mb" }));
   app.use(pinoHttp());
 
-  app.use("/health", healthRouter);
+  app.use("/", healthRouter);
   app.use("/tasks", taskRouter);
   app.use("/files", fileRouter);
 
